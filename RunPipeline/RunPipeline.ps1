@@ -12,7 +12,9 @@ Param(
     [Parameter(HelpMessage = "Settings from repository in compressed Json format", Mandatory = $false)]
     [string] $settingsJson = '{"AppBuild":"", "AppRevision":""}',
     [Parameter(HelpMessage = "Secrets from repository in compressed Json format", Mandatory = $false)]
-    [string] $secretsJson = '{"insiderSasToken":"","licenseFileUrl":"","CodeSignCertificateUrl":"","CodeSignCertificatePassword":"","KeyVaultCertificateUrl":"","KeyVaultCertificatePassword":"","KeyVaultClientId":"","StorageContext":"","ApplicationInsightsConnectionString":""}'
+    [string] $secretsJson = '{"insiderSasToken":"","licenseFileUrl":"","CodeSignCertificateUrl":"","CodeSignCertificatePassword":"","KeyVaultCertificateUrl":"","KeyVaultCertificatePassword":"","KeyVaultClientId":"","StorageContext":"","ApplicationInsightsConnectionString":""}',
+    [Parameter(HelpMessage = "Build mode", Mandatory = $false)]
+    [string] $buildMode
 )
 
 $ErrorActionPreference = "Stop"
@@ -339,6 +341,8 @@ try {
     "enableUICop" | ForEach-Object {
         if ($repo."$_") { $runAlPipelineParams += @{ "$_" = $true } }
     }
+
+    Write-Host "Using buildmode: $buildMode"
 
     Write-Host "Invoke Run-AlPipeline"
     Run-AlPipeline @runAlPipelineParams `

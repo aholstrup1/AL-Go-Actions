@@ -29,6 +29,10 @@ inputs:
     description: Secrets from repository in compressed Json format
     required: false
     default: '{"insiderSasToken":"","licenseFileUrl":"","CodeSignCertificateUrl":"","CodeSignCertificatePw":"","KeyVaultCertificateUrl":"","KeyVaultCertificatePw":"","KeyVaultClientId":"","applicationInsightsConnectionString": ""}'
+  buildMode:
+    description: Build mode
+    required: false
+    default: 'Standard'
 runs:
   using: composite
   steps:
