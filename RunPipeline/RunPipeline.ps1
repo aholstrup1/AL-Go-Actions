@@ -343,6 +343,7 @@ try {
     }
 
     Write-Host "Using buildmode: $buildMode"
+    $preprocessorsymbols = @()
     if ($buildMode -eq 'CLEAN') {
         <#$runAlPipelineParams += @{
             "doNotBuildTests" = $true
@@ -351,7 +352,6 @@ try {
             "doNotPublishApps" = $true
         }#>
         $version = 15
-        $preprocessorsymbols = @()
         for ($version++ ;$version -le [int] 22; $version++)
         {
             $preprocessorsymbols += 'CLEAN' + $version.ToString()
