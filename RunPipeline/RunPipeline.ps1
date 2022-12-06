@@ -343,6 +343,22 @@ try {
     }
 
     Write-Host "Using buildmode: $buildMode"
+    if ($buildMode -eq 'CLEAN') {
+        <#$runAlPipelineParams += @{
+            "doNotBuildTests" = $true
+            "doNotRunTests" = $true
+            "doNotRunBcptTests" = $true
+            "doNotPublishApps" = $true
+        }#>
+        $version = 15
+        $preprocessorsymbols = @()
+        for ($version++ ;$version -le [int] 22; $version++)
+        {
+            $preprocessorsymbols += 'CLEAN' + $version.ToString()
+        }
+        Write-Host "Preprocessor symbols: $preprocessorsymbols"
+    }
+    
 
     Write-Host "Invoke Run-AlPipeline"
     Run-AlPipeline @runAlPipelineParams `
@@ -381,7 +397,8 @@ try {
         -buildArtifactFolder $buildArtifactFolder `
         -CreateRuntimePackages:$CreateRuntimePackages `
         -appBuild $appBuild -appRevision $appRevision `
-        -uninstallRemovedApps
+        -uninstallRemovedApps `
+        -preprocessorSymbols $preprocessorsymbols
 
     if ($containerBaseFolder) {
 
