@@ -101,6 +101,8 @@ try {
     Add-Content -Path $env:GITHUB_OUTPUT -Value "GitHubRunnerJson=$githubRunner"
     Write-Host "GitHubRunnerJson=$githubRunner"
 
+    Write-Host "Test!"
+
     $buildModes = $settings.buildModes | ConvertTo-Json -compress
     Add-Content -Path $env:GITHUB_OUTPUT -Value "buildModes=$buildModes"
     Write-Host "buildModes=$buildModes"
