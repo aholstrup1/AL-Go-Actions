@@ -14,7 +14,8 @@ Param(
     [Parameter(HelpMessage = "Secrets from repository in compressed Json format", Mandatory = $false)]
     [string] $secretsJson = '{"insiderSasToken":"","licenseFileUrl":"","CodeSignCertificateUrl":"","CodeSignCertificatePassword":"","KeyVaultCertificateUrl":"","KeyVaultCertificatePassword":"","KeyVaultClientId":"","StorageContext":"","ApplicationInsightsConnectionString":""}',
     [Parameter(HelpMessage = "Build mode", Mandatory = $false)]
-    [string] $buildMode
+    [ValidateSet('Standard','CLEAN')]
+    [string] $buildMode = "Standard"
 )
 
 $ErrorActionPreference = "Stop"
@@ -342,25 +343,25 @@ try {
         if ($repo."$_") { $runAlPipelineParams += @{ "$_" = $true } }
     }
 
-    Write-Host "Using buildmode: $buildMode"
     $preprocessorsymbols = @()
     if ($buildMode -eq 'CLEAN') {
-        <#$runAlPipelineParams += @{
+        $runAlPipelineParams += @{
             "doNotBuildTests" = $true
             "doNotRunTests" = $true
             "doNotRunBcptTests" = $true
             "doNotPublishApps" = $true
-        }#>
+        }
+
         $version = 15
         for ($version++ ;$version -le [int] 22; $version++)
         {
             $preprocessorsymbols += 'CLEAN' + $version.ToString()
         }
-        Write-Host "Preprocessor symbols: $preprocessorsymbols"
-    }
+        Write-Host "Adding Preprocessor symbols: $preprocessorsymbols"
+    } 
     
 
-    Write-Host "Invoke Run-AlPipeline"
+    Write-Host "Invoke Run-AlPipeline with buildmode $buildMode"
     Run-AlPipeline @runAlPipelineParams `
         -pipelinename $workflowName `
         -containerName $containerName `
