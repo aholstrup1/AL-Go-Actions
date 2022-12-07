@@ -345,10 +345,10 @@ try {
 
     $preprocessorsymbols = @()
     if ($buildMode -eq 'CLEAN') {
-       $runAlPipelineParams["doNotBuildTests"] = $true
+       <#$runAlPipelineParams["doNotBuildTests"] = $true
        $runAlPipelineParams["doNotRunTests"] = $true
        $runAlPipelineParams["doNotRunBcptTests"] = $true
-       $runAlPipelineParams["doNotPublishApps"] = $true
+       $runAlPipelineParams["doNotPublishApps"] = $true#>
        
         $version = 15
         for ($version++ ;$version -le [int] 22; $version++)
