@@ -433,7 +433,7 @@ function ReadSettings {
         "PartnerTelemetryConnectionString"       = ""
         "SendExtendedTelemetryToMicrosoft"       = $false
         "Environments"                           = @()
-        "buildModes"                             = @("Standard")
+        "buildModes"                             = @()
     }
     $gitHubFolder = ".github"
     $repoSettingsPath = $RepoSettingsFile
