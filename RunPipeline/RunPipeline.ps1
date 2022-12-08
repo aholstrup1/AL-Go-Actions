@@ -344,19 +344,17 @@ try {
     }
 
     $preprocessorsymbols = @()
-    if ($buildMode -eq 'CLEAN') {
-       <#$runAlPipelineParams["doNotBuildTests"] = $true
-       $runAlPipelineParams["doNotRunTests"] = $true
-       $runAlPipelineParams["doNotRunBcptTests"] = $true
-       $runAlPipelineParams["doNotPublishApps"] = $true#>
-       
+    if ($buildMode -eq 'CLEAN') {       
         $version = 15
         for ($version++ ;$version -le [int] 22; $version++)
         {
             $preprocessorsymbols += 'CLEAN' + $version.ToString()
         }
         Write-Host "Adding Preprocessor symbols: $preprocessorsymbols"
-    } 
+    } elseif ($buildMode -eq 'Translated') {
+        Write-Host "Adding feature TranslationFile"
+        $runAlPipelineParams += @{ "features" = @("TranslationFile") }
+    }
     
 
     Write-Host "Invoke Run-AlPipeline with buildmode $buildMode"
