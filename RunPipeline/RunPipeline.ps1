@@ -352,6 +352,10 @@ try {
                 $preprocessorsymbols += 'CLEAN' + $version.ToString()
             }
             Write-Host "Adding Preprocessor symbols: $preprocessorsymbols"
+
+            $runAlPipelineParams += @{ 
+                "preprocessorsymbols" = $preprocessorsymbols
+            }
         }
         'LCGTranslated' {
             $runAlPipelineParams += @{ 
@@ -403,8 +407,7 @@ try {
         -buildArtifactFolder $buildArtifactFolder `
         -CreateRuntimePackages:$CreateRuntimePackages `
         -appBuild $appBuild -appRevision $appRevision `
-        -uninstallRemovedApps `
-        -preprocessorSymbols $preprocessorsymbols
+        -uninstallRemovedApps
 
     if ($containerBaseFolder) {
 
