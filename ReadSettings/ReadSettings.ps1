@@ -102,8 +102,9 @@ try {
     Write-Host "GitHubRunnerJson=$githubRunner"
 
     # Default to Translated if not specified in settings
-    if (!$settings.buildMode) {
-        $settings.buildMode = @("Translated")
+    Write-Host "Settings: $settings"
+    if (!$settings.buildModes) {
+        $settings.buildModes = @("Translated")
     }
 
     $buildModes = $settings.buildModes | ConvertTo-Json -compress
