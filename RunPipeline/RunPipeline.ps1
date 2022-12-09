@@ -14,8 +14,8 @@ Param(
     [Parameter(HelpMessage = "Secrets from repository in compressed Json format", Mandatory = $false)]
     [string] $secretsJson = '{"insiderSasToken":"","licenseFileUrl":"","CodeSignCertificateUrl":"","CodeSignCertificatePassword":"","KeyVaultCertificateUrl":"","KeyVaultCertificatePassword":"","KeyVaultClientId":"","StorageContext":"","ApplicationInsightsConnectionString":""}',
     [Parameter(HelpMessage = "Build mode", Mandatory = $false)]
-    [ValidateSet('Standard','CLEAN', 'Translated')]
-    [string] $buildMode = "Standard"
+    [ValidateSet('Translated', 'Clean', 'LCGTranslated')]
+    [string] $buildMode = "Translated"
 )
 
 $ErrorActionPreference = "Stop"
@@ -343,19 +343,28 @@ try {
         if ($repo."$_") { $runAlPipelineParams += @{ "$_" = $true } }
     }
 
-    $preprocessorsymbols = @()
-    if ($buildMode -eq 'CLEAN') {       
-        $version = 15
-        for ($version++ ;$version -le [int] 22; $version++)
-        {
-            $preprocessorsymbols += 'CLEAN' + $version.ToString()
+    switch($buildMode){
+        'Clean' {
+            $preprocessorsymbols = @()
+            $version = 15
+            for ($version++ ;$version -le [int] 22; $version++) # TODO: Get max version from BC
+            {
+                $preprocessorsymbols += 'CLEAN' + $version.ToString()
+            }
+            Write-Host "Adding Preprocessor symbols: $preprocessorsymbols"
         }
-        Write-Host "Adding Preprocessor symbols: $preprocessorsymbols"
-    } elseif ($buildMode -eq 'Translated') {
-        Write-Host "Adding feature TranslationFile"
-        $runAlPipelineParams += @{ "features" = @("TranslationFile") }
+        'LCGTranslated' {
+            $runAlPipelineParams += @{ 
+                "features" = @("lcgtranslationfile") 
+            }
+        }
+        'Translated' {
+            Write-Host "Restoring translation files"
+            $runAlPipelineParams += @{ 
+                "features" = @("translationfile") 
+            }
+        }
     }
-    
 
     Write-Host "Invoke Run-AlPipeline with buildmode $buildMode"
     Run-AlPipeline @runAlPipelineParams `

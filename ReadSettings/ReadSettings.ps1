@@ -101,7 +101,10 @@ try {
     Add-Content -Path $env:GITHUB_OUTPUT -Value "GitHubRunnerJson=$githubRunner"
     Write-Host "GitHubRunnerJson=$githubRunner"
 
-    Write-Host "Test!"
+    # Default to Translated if not specified in settings
+    if (!$settings.buildMode) {
+        $settings.buildMode = @("Translated")
+    }
 
     $buildModes = $settings.buildModes | ConvertTo-Json -compress
     Add-Content -Path $env:GITHUB_OUTPUT -Value "buildModes=$buildModes"
