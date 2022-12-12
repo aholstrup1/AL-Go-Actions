@@ -348,14 +348,13 @@ try {
 
     switch($buildMode){
         'Clean' {
-            $preprocessorsymbols = @()
-            $version = 15
-            for ($version++ ;$version -le [int] 22; $version++) # TODO: Get max version from BC
-            {
-                $preprocessorsymbols += 'CLEAN' + $version.ToString()
-            }
-            Write-Host "Adding Preprocessor symbols: $preprocessorsymbols"
+            $preprocessorsymbols = $repo.cleanModePreprocessorSymbols
 
+            if (!$preprocessorsymbols) {
+                throw "No cleanModePreprocessorSymbols defined in settings.json for this project. Please add the preprocessor symbols to use when building in clean mode or disable CLEAN mode."
+            }
+            
+            Write-Host "Adding Preprocessor symbols: $preprocessorsymbols"
             $runAlPipelineParams += @{ 
                 "preprocessorsymbols" = $preprocessorsymbols
             }
