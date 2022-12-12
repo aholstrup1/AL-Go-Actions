@@ -353,22 +353,25 @@ try {
             if (!$preprocessorsymbols) {
                 throw "No cleanModePreprocessorSymbols defined in settings.json for this project. Please add the preprocessor symbols to use when building in clean mode or disable CLEAN mode."
             }
-            
-            Write-Host "Adding Preprocessor symbols: $preprocessorsymbols"
-            $runAlPipelineParams += @{ 
-                "preprocessorsymbols" = $preprocessorsymbols
+
+            if (!$runAlPipelineParams.ContainsKey('preprocessorsymbols')) {
+                $runAlPipelineParams["preprocessorsymbols"] = @()
             }
+
+            Write-Host "Adding Preprocessor symbols: $preprocessorsymbols"
+            $runAlPipelineParams["preprocessorsymbols"] += $preprocessorsymbols
         }
         'LCGTranslated' {
-            $runAlPipelineParams += @{ 
-                "features" = @("lcgtranslationfile") 
+            if (!$runAlPipelineParams.ContainsKey('features')) {
+                $runAlPipelineParams["features"] = @()
             }
+            $runAlPipelineParams["features"] += "lcgtranslationfile"
         }
         'Translated' {
-            Write-Host "Restoring translation files"
-            $runAlPipelineParams += @{ 
-                "features" = @("translationfile") 
+            if (!$runAlPipelineParams.ContainsKey('features')) {
+                $runAlPipelineParams["features"] = @()
             }
+            $runAlPipelineParams["features"] += "translationfile"
         }
     }
 
