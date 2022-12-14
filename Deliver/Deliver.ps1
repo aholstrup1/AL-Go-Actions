@@ -151,6 +151,7 @@ try {
             Write-Host "- $($_.Name)"
         }
 
+        Write-Host "Delivering to $deliveryTarget"
         $customScript = Join-Path $ENV:GITHUB_WORKSPACE ".github\DeliverTo$deliveryTarget.ps1" 
         if (Test-Path $customScript -PathType Leaf) {
             $projectSettings = Get-Content -Path (Join-Path $ENV:GITHUB_WORKSPACE "$thisProject\.AL-Go\settings.json") | ConvertFrom-Json | ConvertTo-HashTable -Recurse
@@ -162,7 +163,7 @@ try {
                 "RepoSettings" = $settings
                 "ProjectSettings" = $projectSettings
             }
-
+            Write-Host "Executing custom script $customScript"
             Write-Host "[Test] $projectName-$refname-Apps-*.*.*.*"
 
             $appsfolder = @(Get-ChildItem -Path (Join-Path $baseFolder "$projectName-$refname-Apps-*.*.*.*") -Directory)
@@ -174,6 +175,8 @@ try {
                 throw "Internal error - multiple apps folders located"
             }
             $parameters.appsfolder = $appsfolder[0].FullName
+            $parameters.appsfolderAllBuildModes = @(Get-ChildItem -Path (Join-Path $baseFolder "-$refname-Apps-*.*.*.*") -Directory)
+
             $testAppsFolder = @(Get-ChildItem -Path (Join-Path $baseFolder "$projectName-$refname-TestApps-*.*.*.*") -Directory)
             if ($testAppsFolder.Count -gt 1) {
                 $testAppsFolder | Out-Host
