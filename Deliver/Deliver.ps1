@@ -175,7 +175,6 @@ try {
                 throw "Internal error - multiple apps folders located"
             }
             $parameters.appsfolder = $appsfolder[0].FullName
-            $parameters.appsfolderAllBuildModes = @(Get-ChildItem -Path (Join-Path $baseFolder "-$refname-Apps-*.*.*.*") -Directory)
 
             $testAppsFolder = @(Get-ChildItem -Path (Join-Path $baseFolder "$projectName-$refname-TestApps-*.*.*.*") -Directory)
             if ($testAppsFolder.Count -gt 1) {
@@ -199,6 +198,11 @@ try {
             else {
                 $parameters.dependenciesFolder = ""
             }
+
+            $parameters.appsfolderAllBuildModes = @(Get-ChildItem -Path (Join-Path $baseFolder "-$refname-Apps-*.*.*.*") -Directory)
+            $parameters.testAppsfolderAllBuildModes = @(Get-ChildItem -Path (Join-Path $baseFolder "-$refname-TestApps-*.*.*.*") -Directory)
+            $parameters.dependenciesfolderAllBuildModes = @(Get-ChildItem -Path (Join-Path $baseFolder "-$refname-Dependencies-*.*.*.*") -Directory)
+
             . $customScript -parameters $parameters
         }
         elseif ($deliveryTarget -eq "GitHubPackages") {
