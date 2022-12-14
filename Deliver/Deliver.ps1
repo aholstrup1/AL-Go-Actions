@@ -198,10 +198,14 @@ try {
             else {
                 $parameters.dependenciesFolder = ""
             }
-
-            $parameters.appsfolderAllBuildModes = @((Get-ChildItem -Path (Join-Path $baseFolder "-$refname-Apps-*.*.*.*") -Directory).FullName)
-            $parameters.testAppsfolderAllBuildModes = @((Get-ChildItem -Path (Join-Path $baseFolder "-$refname-TestApps-*.*.*.*") -Directory).FullName)
-            $parameters.dependenciesfolderAllBuildModes = @((Get-ChildItem -Path (Join-Path $baseFolder "-$refname-Dependencies-*.*.*.*") -Directory).FullName)
+            $appsfolderAllBuildModes = @()
+            (Get-ChildItem -Path (Join-Path $baseFolder "*-$refname-Apps-*.*.*.*") -Directory) | ForEach-Object {
+                Write-Host "Found apps folder: $($_.FullName)"
+                $appsfolderAllBuildModes += $_.FullName
+            }
+            $parameters.appsfolderAllBuildModes = $appsfolderAllBuildModes
+            #$parameters.testAppsfolderAllBuildModes = @((Get-ChildItem -Path (Join-Path $baseFolder "-$refname-TestApps-*.*.*.*") -Directory).FullName)
+            #$parameters.dependenciesfolderAllBuildModes = @((Get-ChildItem -Path (Join-Path $baseFolder "-$refname-Dependencies-*.*.*.*") -Directory).FullName)
 
             . $customScript -parameters $parameters
         }
