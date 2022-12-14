@@ -199,9 +199,9 @@ try {
                 $parameters.dependenciesFolder = ""
             }
 
-            $parameters.appsfolderAllBuildModes = @(Get-ChildItem -Path (Join-Path $baseFolder "-$refname-Apps-*.*.*.*") -Directory)
-            $parameters.testAppsfolderAllBuildModes = @(Get-ChildItem -Path (Join-Path $baseFolder "-$refname-TestApps-*.*.*.*") -Directory)
-            $parameters.dependenciesfolderAllBuildModes = @(Get-ChildItem -Path (Join-Path $baseFolder "-$refname-Dependencies-*.*.*.*") -Directory)
+            $parameters.appsfolderAllBuildModes = @((Get-ChildItem -Path (Join-Path $baseFolder "-$refname-Apps-*.*.*.*") -Directory).FullName)
+            $parameters.testAppsfolderAllBuildModes = @((Get-ChildItem -Path (Join-Path $baseFolder "-$refname-TestApps-*.*.*.*") -Directory).FullName)
+            $parameters.dependenciesfolderAllBuildModes = @((Get-ChildItem -Path (Join-Path $baseFolder "-$refname-Dependencies-*.*.*.*") -Directory).FullName)
 
             . $customScript -parameters $parameters
         }
