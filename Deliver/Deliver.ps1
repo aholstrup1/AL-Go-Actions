@@ -163,7 +163,9 @@ try {
                 "ProjectSettings" = $projectSettings
             }
 
-            $appsfolder = @(Get-ChildItem -Path (Join-Path $baseFolder "*-$refname-Apps-*.*.*.*") -Directory)
+            Write-Host "[Test] $projectName-$refname-Apps-*.*.*.*"
+
+            $appsfolder = @(Get-ChildItem -Path (Join-Path $baseFolder "$projectName-$refname-Apps-*.*.*.*") -Directory)
             if ($appsFolder.Count -eq 0) {
                 throw "Internal error - unable to locate apps folder"
             }
@@ -172,7 +174,7 @@ try {
                 throw "Internal error - multiple apps folders located"
             }
             $parameters.appsfolder = $appsfolder[0].FullName
-            $testAppsFolder = @(Get-ChildItem -Path (Join-Path $baseFolder "*-$refname-TestApps-*.*.*.*") -Directory)
+            $testAppsFolder = @(Get-ChildItem -Path (Join-Path $baseFolder "$projectName-$refname-TestApps-*.*.*.*") -Directory)
             if ($testAppsFolder.Count -gt 1) {
                 $testAppsFolder | Out-Host
                 throw "Internal error - multiple testApps folders located"
@@ -183,7 +185,7 @@ try {
             else {
                 $parameters.testAppsFolder = ""
             }
-            $dependenciesFolder = @(Get-ChildItem -Path (Join-Path $baseFolder "*-$refname-Dependencies-*.*.*.*") -Directory)
+            $dependenciesFolder = @(Get-ChildItem -Path (Join-Path $baseFolder "$projectName-$refname-Dependencies-*.*.*.*") -Directory)
             if ($dependenciesFolder.Count -gt 1) {
                 $dependenciesFolder | Out-Host
                 throw "Internal error - multiple dependencies folders located"
