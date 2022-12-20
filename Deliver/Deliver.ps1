@@ -151,10 +151,14 @@ try {
             Write-Host "- $($_.Name)"
         }
 
-        Write-Host "Delivering to $deliveryTarget"
-        $customScript = Join-Path $ENV:GITHUB_WORKSPACE ".github\DeliverTo$deliveryTarget.ps1" 
+        # Check if there is a custom script to run for the delivery target
+        $customScript = Join-Path $ENV:GITHUB_WORKSPACE ".github\DeliverTo$deliveryTarget.ps1"
+
         if (Test-Path $customScript -PathType Leaf) {
+            Write-Host "Found custom script $customScript for delivery target $deliveryTarget"
+            
             $projectSettings = Get-Content -Path (Join-Path $ENV:GITHUB_WORKSPACE "$thisProject\.AL-Go\settings.json") | ConvertFrom-Json | ConvertTo-HashTable -Recurse
+            
             $parameters = @{
                 "Project" = $thisProject
                 "ProjectName" = $projectName
@@ -163,50 +167,41 @@ try {
                 "RepoSettings" = $settings
                 "ProjectSettings" = $projectSettings
             }
-            Write-Host "Executing custom script $customScript"
-            Write-Host "[Test] $projectName-$refname-Apps-*.*.*.*"
+            #Calculate the folders per artifact type
+            
+            #Calculate the folders per artifact type
+            'Apps', 'TestApps', 'Dependencies' | ForEach-Object {
+                $artifactType = $_
+                $singleArtifactFilter = "$projectToFilter-$refname-$artifactType-*.*.*.*";
 
-            $appsfolder = @(Get-ChildItem -Path (Join-Path $baseFolder "$projectName-$refname-Apps-*.*.*.*") -Directory)
-            if ($appsFolder.Count -eq 0) {
-                throw "Internal error - unable to locate apps folder"
-            }
-            if ($appsFolder.Count -gt 1) {
-                $appsFolder | Out-Host
-                throw "Internal error - multiple apps folders located"
-            }
-            $parameters.appsfolder = $appsfolder[0].FullName
+                # Get the folder holding the artifacts from the standard build
+                $artifactFolder =  @(Get-ChildItem -Path (Join-Path $baseFolder $singleArtifactFilter) -Directory)
 
-            $testAppsFolder = @(Get-ChildItem -Path (Join-Path $baseFolder "$projectName-$refname-TestApps-*.*.*.*") -Directory)
-            if ($testAppsFolder.Count -gt 1) {
-                $testAppsFolder | Out-Host
-                throw "Internal error - multiple testApps folders located"
-            }
-            elseif ($testAppsFolder.Count -eq 1) {
-                $parameters.testAppsFolder = $testAppsFolder[0]
-            }
-            else {
-                $parameters.testAppsFolder = ""
-            }
-            $dependenciesFolder = @(Get-ChildItem -Path (Join-Path $baseFolder "$projectName-$refname-Dependencies-*.*.*.*") -Directory)
-            if ($dependenciesFolder.Count -gt 1) {
-                $dependenciesFolder | Out-Host
-                throw "Internal error - multiple dependencies folders located"
-            }
-            elseif ($dependenciesFolder.Count -eq 1) {
-                $parameters.dependenciesFolder = $dependenciesFolder[0]
-            }
-            else {
-                $parameters.dependenciesFolder = ""
-            }
-            $appsfolderAllBuildModes = @()
-            (Get-ChildItem -Path (Join-Path $baseFolder "*-$refname-Apps-*.*.*.*") -Directory) | ForEach-Object {
-                Write-Host "Found apps folder: $($_.FullName)"
-                $appsfolderAllBuildModes += $_.FullName
-            }
-            $parameters.appsfolderAllBuildModes = $appsfolderAllBuildModes
-            #$parameters.testAppsfolderAllBuildModes = @((Get-ChildItem -Path (Join-Path $baseFolder "-$refname-TestApps-*.*.*.*") -Directory).FullName)
-            #$parameters.dependenciesfolderAllBuildModes = @((Get-ChildItem -Path (Join-Path $baseFolder "-$refname-Dependencies-*.*.*.*") -Directory).FullName)
+                # Verify that there is an apps folder
+                if ($artifactFolder.Count -eq 0 -and $artifactType -eq "Apps") {
+                    throw "Internal error - unable to locate apps folder"
+                }
 
+                # Verify that there is only at most one artifact folder for the standard build
+                if ($artifactFolder.Count -gt 1) {
+                    $artifactFolder | Out-Host
+                    throw "Internal error - multiple $artifactType folders located"
+                }
+
+                # Add the artifact folder to the parameters
+                if ($artifactFolder.Count -ne 0) {
+                    $parameters[$artifactType.ToLowerInvariant() + "Folder"] = $artifactFolder[0].FullName
+                }
+
+                # Get the folders holding the artifacts from all build modes
+                $multipleArtifactFilter = "*-$refname-*$artifactType-*.*.*.*";
+                $artifactsFolders = @(Get-ChildItem -Path (Join-Path $baseFolder $multipleArtifactFilter) -Directory)
+                if ($artifactsFolders.Count -gt 0) {
+                    $parameters[$artifactType.ToLowerInvariant() + "Folders"] = $artifactFolders.FullName
+                }
+            }
+            
+            Write-Host "Calling custom script: $customScript"
             . $customScript -parameters $parameters
         }
         elseif ($deliveryTarget -eq "GitHubPackages") {
