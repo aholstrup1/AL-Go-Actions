@@ -14,7 +14,7 @@ Param(
     [Parameter(HelpMessage = "Secrets from repository in compressed Json format", Mandatory = $false)]
     [string] $secretsJson = '{"insiderSasToken":"","licenseFileUrl":"","CodeSignCertificateUrl":"","CodeSignCertificatePassword":"","KeyVaultCertificateUrl":"","KeyVaultCertificatePassword":"","KeyVaultClientId":"","StorageContext":"","ApplicationInsightsConnectionString":""}',
     [Parameter(HelpMessage = "Build mode", Mandatory = $false)]
-    [ValidateSet('Default', 'Translated', 'Clean', 'LCGTranslated')]
+    [ValidateSet('Default', 'Translated', 'Clean')]
     [string] $buildMode = 'Default'
 )
 
@@ -357,12 +357,6 @@ try {
 
             Write-Host "Adding Preprocessor symbols: $preprocessorsymbols"
             $runAlPipelineParams["preprocessorsymbols"] += $preprocessorsymbols
-        }
-        'LCGTranslated' {
-            if (!$runAlPipelineParams.ContainsKey('features')) {
-                $runAlPipelineParams["features"] = @()
-            }
-            $runAlPipelineParams["features"] += "lcgtranslationfile"
         }
         'Translated' {
             if (!$runAlPipelineParams.ContainsKey('features')) {
