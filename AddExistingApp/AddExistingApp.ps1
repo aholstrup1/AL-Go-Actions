@@ -101,13 +101,7 @@ try {
     }
 
     CheckAndCreateProjectFolder -project $project
-    $baseFolder = (Get-Location).path
-
-    Write-Host "Reading $ALGoSettingsFile"
-    $settingsJson = Get-Content $ALGoSettingsFile -Encoding UTF8 | ConvertFrom-Json
-    if ($settingsJson.PSObject.Properties.Name -eq "type") {
-        $type = $settingsJson.type
-    }
+    $projectFolder = (Get-Location).path
 
     $appNames = @()
     getfiles -url $url | ForEach-Object {
@@ -170,14 +164,14 @@ try {
         }
 
         $orgfolderName = $appJson.name.Split([System.IO.Path]::getInvalidFileNameChars()) -join ""
-        $folderName = GetUniqueFolderName -baseFolder $baseFolder -folderName $orgfolderName
+        $folderName = GetUniqueFolderName -baseFolder $projectFolder -folderName $orgfolderName
         if ($folderName -ne $orgfolderName) {
             OutputWarning -message "$orgFolderName already exists as a folder in the repo, using $folderName instead"
         }
 
-        Move-Item -Path $appFolder -Destination $baseFolder -Force
+        Move-Item -Path $appFolder -Destination $projectFolder -Force
         Rename-Item -Path ([System.IO.Path]::GetFileName($appFolder)) -NewName $folderName
-        $appFolder = Join-Path $baseFolder $folderName
+        $appFolder = Join-Path $projectFolder $folderName
 
         Get-ChildItem $appFolder -Filter '*.*' -Recurse | ForEach-Object {
             if ($_.Name.Contains('%20')) {
@@ -188,7 +182,7 @@ try {
         $appFolders | ForEach-Object {
             # Modify .AL-Go\settings.json
             try {
-                $settingsJsonFile = Join-Path $baseFolder $ALGoSettingsFile
+                $settingsJsonFile = Join-Path $projectFolder $ALGoSettingsFile
                 $SettingsJson = Get-Content $settingsJsonFile -Encoding UTF8 | ConvertFrom-Json
                 if (@($settingsJson.appFolders)+@($settingsJson.testFolders)) {
                     if ($ttype -eq "Test App") {
@@ -201,7 +195,7 @@ try {
                             $SettingsJson.appFolders += @($folderName)
                         }
                     }
-                    $SettingsJson | ConvertTo-Json -Depth 99 | Set-Content -Path $settingsJsonFile -Encoding UTF8
+                    $SettingsJson | Set-JsonContentLF -Path $settingsJsonFile
                 }
             }
             catch {
@@ -209,7 +203,7 @@ try {
             }
 
             # Modify workspace
-            Get-ChildItem -Path $baseFolder -Filter "*.code-workspace" | ForEach-Object {
+            Get-ChildItem -Path $projectFolder -Filter "*.code-workspace" | ForEach-Object {
                 try {
                     $workspaceFileName = $_.Name
                     $workspaceFile = $_.FullName
@@ -217,7 +211,7 @@ try {
                     if (-not ($workspace.folders | Where-Object { $_.Path -eq $foldername })) {
                         $workspace.folders += @(@{ "path" = $foldername })
                     }
-                    $workspace | ConvertTo-Json -Depth 99 | Set-Content -Path $workspaceFile -Encoding UTF8
+                    $workspace | Set-JsonContentLF -Path $workspaceFile
                 }
                 catch {
                    throw "$workspaceFileName is malformed.$([environment]::Newline) $($_.Exception.Message)"
