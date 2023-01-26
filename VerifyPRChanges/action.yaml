@@ -18,9 +18,9 @@ runs:
   using: composite
   steps:
     - uses: actions/checkout@v3
-        with:
-          lfs: true
-          ref: ${{ inputs.headSHA }}
+      with:
+        lfs: true
+        ref: ${{ inputs.headSHA }}
     
     - name: Determine Changed Files
       shell: ${{ inputs.shell }}
