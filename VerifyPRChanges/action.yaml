@@ -8,12 +8,23 @@ inputs:
   baseSHA:
     description: Base SHA for the Pull Request
     required: false
+    default: ${{ github.event.pull_request.base.sha }}
   headSHA:
     description: Head SHA for the Pull Request
     required: false
+    default: ${{ github.event.pull_request.head.sha }}
   prHeadRepository:
     description: Name of the repository
     required: false
+    default: ${{ github.event.pull_request.head.repo.full_name }}
+  prBaseRepository:
+    description: Name of the repository
+    required: false
+    default: ${{ github.event.pull_request.base.repo.full_name }}
+  githubapiurl:
+    description: Github API URL
+    required: false
+    default: ${{ github.api_url }}
 runs:
   using: composite
   steps:
@@ -25,7 +36,7 @@ runs:
     - name: Determine Changed Files
       shell: ${{ inputs.shell }}
       id: ChangedFiles
-      run: ${{ github.action_path }}/VerifyPRChanges.ps1 -baseSHA ${{ inputs.baseSHA }} -headSHA ${{ inputs.headSHA }} -prHeadRepository ${{ inputs.prHeadRepository }} -prBaseRepository ${{ github.repository }} -githubapiurl ${{ github.api_url }}
+      run: ${{ github.action_path }}/VerifyPRChanges.ps1 -baseSHA ${{ inputs.baseSHA }} -headSHA ${{ inputs.headSHA }} -prHeadRepository ${{ inputs.prHeadRepository }} -prBaseRepository ${{ inputs.prBaseRepository }} -githubapiurl ${{ inputs.githubapiurl }}
 
 branding:
   icon: terminal
