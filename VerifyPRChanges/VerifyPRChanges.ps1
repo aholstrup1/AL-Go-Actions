@@ -4,7 +4,7 @@ Param(
     [Parameter(HelpMessage = "The GitHub actor running the action", Mandatory = $true)]
     [string] $headSHA,
     [Parameter(HelpMessage = "The GitHub actor running the action", Mandatory = $true)]
-    [string] $repository,
+    [string] $repository
 )
 
 $ErrorActionPreference = "STOP"
