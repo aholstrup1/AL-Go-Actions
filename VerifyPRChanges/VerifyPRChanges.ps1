@@ -1,20 +1,25 @@
 Param(
-    [Parameter(HelpMessage = "The GitHub actor running the action", Mandatory = $true)]
+    [Parameter(HelpMessage = "Base commit of the PR", Mandatory = $true)]
     [string] $baseSHA,
-    [Parameter(HelpMessage = "The GitHub actor running the action", Mandatory = $true)]
+    [Parameter(HelpMessage = "HEAD commit of the PR", Mandatory = $true)]
     [string] $headSHA,
-    [Parameter(HelpMessage = "The GitHub actor running the action", Mandatory = $true)]
-    [string] $repository
+    [Parameter(HelpMessage = "The name of the repository the PR is coming from", Mandatory = $true)]
+    [string] $prHeadRepository,
+    [Parameter(HelpMessage = "The name of the repository the PR is going to", Mandatory = $true)]
+    [string] $prBaseRepository,
+    [Parameter(HelpMessage = "The URL of the GitHub API", Mandatory = $true)]
+    [string] $githubApiUrl
+
 )
 
 $ErrorActionPreference = "STOP"
 Set-StrictMode -version 2.0
-if ($repository -ne $ENV:GITHUB_REPOSITORY) {
+if ($prHeadRepository -ne $prBaseRepository) {
     $headers = @{             
         "Authorization" = 'token ${{ secrets.GITHUB_TOKEN }}'
         "Accept" = "application/vnd.github.baptiste-preview+json"
     }
-    $url = "$($ENV:GITHUB_API_URL)/repos/$($ENV:GITHUB_REPOSITORY)/compare/$baseSHA...$headSHA"
+    $url = "$($githubApiUrl)/repos/$($prBaseRepository)/compare/$baseSHA...$headSHA"
     $response = Invoke-WebRequest -UseBasicParsing -Headers $headers -Uri $url | ConvertFrom-Js
     Write-Host "Files Changed:"
     $response.files | ForEach-Object {
@@ -26,4 +31,6 @@ if ($repository -ne $ENV:GITHUB_REPOSITORY) {
         throw "Pull Request containing changes to scripts, workflows or CODEOWNERS are not allowed from forks."
       }
     }
+} else {
+    Write-Host "Pull Request is from the same repository, skipping check."
 }
