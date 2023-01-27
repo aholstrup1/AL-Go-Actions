@@ -1,0 +1,29 @@
+name: PowerShell script
+author: Microsoft Corporation
+inputs:
+  projects:
+    description: JSON formatted string of projects to build
+    required: true
+  buildOrder:
+    description: JSON formatted build order
+    required: true
+  buildOrderDepth:
+    description:  Build order depth
+    required: true
+  workflowDepth: workflowDepth
+    description: 
+    required: true
+  outputPath: outputPath
+    description: 
+    required: false
+    default: ${{ github.output }}
+runs:
+  using: composite
+  steps:
+    - name: Determine Changed Files
+      id: BuildOrder
+      run: ${{ github.action_path }}/DetermineBuildOrder.ps1 -Projects ${{ inputs.projects }} -BuildOrder ${{ inputs.buildOrder }} -BuildOrderDepth ${{ inputs.buildOrderDepth }} -WorkflowDepth ${{ inputs.workflowDepth }} -OutputPath ${{ inputs.outputPath }}
+
+branding:
+  icon: terminal
+  color: blue
