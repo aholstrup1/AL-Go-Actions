@@ -9,15 +9,17 @@ Param(
     [string] $refName
 )
 
-
-$settings = '${{ env.Settings }}' | ConvertFrom-Json
-$project = '${{ matrix.project }}'
-$buildMode = '${{ matrix.buildMode }}'
-$refName = ''
+Write-Host "##[group]Calculate Artifact Names"
+Write-Host "Settings: $settings"
+Write-Host "Project: $project"
+Write-Host "BuildMode: $buildMode"
+Write-Host "RefName: $refName"
 
 
 $ErrorActionPreference = "STOP"
 Set-StrictMode -version 2.0
+
+$settings = $settings | ConvertFrom-Json
 
 if ($project -eq ".") { 
   $project = $settings.repoName 
