@@ -23,10 +23,10 @@ inputs:
     default: ${{ github.output }}
 runs:
   using: composite
-  shell: ${{ inputs.shell }}
   steps:
     - name: Determine Changed Files
       id: BuildOrder
+      shell: ${{ inputs.shell }}
       run: ${{ github.action_path }}/DetermineBuildOrder.ps1 -Projects ${{ inputs.projects }} -BuildOrder ${{ inputs.buildOrder }} -BuildOrderDepth ${{ inputs.buildOrderDepth }} -WorkflowDepth ${{ inputs.workflowDepth }} -OutputPath ${{ inputs.outputPath }}
 
 branding:
