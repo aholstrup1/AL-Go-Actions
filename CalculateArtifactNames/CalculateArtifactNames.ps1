@@ -1,6 +1,6 @@
 Param(
     [Parameter(HelpMessage = "settings", Mandatory = $true)]
-    [string] $settings,
+    [string] $settings = '{"appBuild":"", "appRevision":""}',
     [Parameter(HelpMessage = "project", Mandatory = $true)]
     [string] $project,
     [Parameter(HelpMessage = "buildmode", Mandatory = $true)]
@@ -16,10 +16,10 @@ Write-Host "BuildMode: $buildMode"
 Write-Host "RefName: $refName"
 
 
-$ErrorActionPreference = "STOP"
-Set-StrictMode -version 2.0
+#$ErrorActionPreference = "STOP"
+#Set-StrictMode -version 2.0
 
-$settings = $settings | ConvertFrom-Json
+$settings = $settings | ConvertFrom-Json | ConvertTo-HashTable
 
 if ($project -eq ".") { 
   $project = $settings.repoName 
