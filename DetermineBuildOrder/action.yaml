@@ -1,6 +1,10 @@
 name: PowerShell script
 author: Microsoft Corporation
 inputs:
+  shell:
+    description: Shell in which you want to run the action (powershell or pwsh)
+    required: false
+    default: powershell
   projects:
     description: JSON formatted string of projects to build
     required: true
@@ -19,6 +23,7 @@ inputs:
     default: ${{ github.output }}
 runs:
   using: composite
+  shell: ${{ inputs.shell }}
   steps:
     - name: Determine Changed Files
       id: BuildOrder
