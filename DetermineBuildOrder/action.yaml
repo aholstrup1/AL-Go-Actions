@@ -10,10 +10,10 @@ inputs:
   buildOrderDepth:
     description:  Build order depth
     required: true
-  workflowDepth: workflowDepth
+  workflowDepth:
     description: Workflow depth
     required: true
-  outputPath: outputPath
+  outputPath:
     description: output path
     required: false
     default: ${{ github.output }}
