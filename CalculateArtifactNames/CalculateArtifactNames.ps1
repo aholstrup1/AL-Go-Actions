@@ -1,11 +1,11 @@
 Param(
-    [Parameter(HelpMessage = "", Mandatory = $true)]
+    [Parameter(HelpMessage = "settings", Mandatory = $true)]
     [string] $settings,
-    [Parameter(HelpMessage = "", Mandatory = $true)]
+    [Parameter(HelpMessage = "project", Mandatory = $true)]
     [string] $project,
-    [Parameter(HelpMessage = "", Mandatory = $true)]
+    [Parameter(HelpMessage = "buildmode", Mandatory = $true)]
     [string] $buildMode,
-    [Parameter(HelpMessage = "", Mandatory = $true)]
+    [Parameter(HelpMessage = "refname", Mandatory = $true)]
     [string] $refName
 )
 
