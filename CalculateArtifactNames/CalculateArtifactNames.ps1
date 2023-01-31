@@ -26,7 +26,7 @@ $ErrorActionPreference = "STOP"
 Set-StrictMode -version 2.0
 
 Write-Host $settingsJson
-$settings = $settingsJson | ConvertFrom-Json | ConvertTo-HashTable
+$settings = $settingsJson | ConvertFrom-Json
 
 if ($project -eq ".") { 
   $project = $settings.repoName 
