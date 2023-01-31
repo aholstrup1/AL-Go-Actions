@@ -1,25 +1,32 @@
 Param(
     [Parameter(HelpMessage = "settings", Mandatory = $true)]
-    [string] $settings,
+    [string] $settingsJson,
     [Parameter(HelpMessage = "project", Mandatory = $true)]
     [string] $project,
     [Parameter(HelpMessage = "buildmode", Mandatory = $true)]
     [string] $buildMode,
     [Parameter(HelpMessage = "refname", Mandatory = $true)]
-    [string] $refName
+    [string] $refName,
+    [switch] $runLocally
 )
 
-Write-Host "##[group]Calculate Artifact Names"
-Write-Host "Settings: $settings"
-Write-Host "Project: $project"
-Write-Host "BuildMode: $buildMode"
-Write-Host "RefName: $refName"
+function Set-EnvVariable([string]$name, [string]$value, [switch]$runLocally) {
+    Write-Host "Assigning $value to $name"
+    if ($runLocally) {
+        [Environment]::SetEnvironmentVariable($name, $value)
+    } else {
+        Write-Host "##[set-env name=$name;]$value"
+        Add-Content -Path $env:GITHUB_OUTPUT -Value "$name=$value"
+        Add-Content -Path $env:GITHUB_ENV -Value "$name=$value"
+    }
+}
 
 
-#$ErrorActionPreference = "STOP"
-#Set-StrictMode -version 2.0
+$ErrorActionPreference = "STOP"
+Set-StrictMode -version 2.0
 
-$settings = $settings | ConvertFrom-Json | ConvertTo-HashTable
+Write-Host $settingsJson
+$settings = $settingsJson | ConvertFrom-Json | ConvertTo-HashTable
 
 if ($project -eq ".") { 
   $project = $settings.repoName 
@@ -31,9 +38,7 @@ if ($buildMode -eq 'Default') {
 
 'Apps','Dependencies','TestApps','TestResults','BcptTestResults','BuildOutput','ContainerEventLog' | ForEach-Object {
   $name = "$($_)ArtifactsName"
-  $value = "$($project.Replace('\','_').Replace('/','_'))-$($ref)-$buildMode$_-$($settings.repoVersion).$($settings.appBuild).$($settings.appRevision)"
-  Add-Content -Path $env:GITHUB_OUTPUT -Value "$name=$value"
-  Add-Content -Path $env:GITHUB_ENV -Value "$name=$value"
+  $value = "$($project.Replace('\','_').Replace('/','_'))-$($refName)-$buildMode$_-$($settings.repoVersion).$($settings.appBuild).$($settings.appRevision)"
+  Set-EnvVariable -name $name -value $value -runLocally:$runLocally
 }
-Add-Content -Path $env:GITHUB_OUTPUT -Value "BuildMode=$buildMode"
-Add-Content -Path $env:GITHUB_ENV -Value "BuildMode=$buildMode"
+Set-EnvVariable -name "BuildMode" -value $buildMode -runLocally:$runLocally
