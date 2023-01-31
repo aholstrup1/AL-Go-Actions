@@ -1,6 +1,6 @@
 Param(
     [Parameter(HelpMessage = "settings", Mandatory = $true)]
-    [string] $settings = '{"appBuild":"", "appRevision":""}',
+    [string] $settings,
     [Parameter(HelpMessage = "project", Mandatory = $true)]
     [string] $project,
     [Parameter(HelpMessage = "buildmode", Mandatory = $true)]
