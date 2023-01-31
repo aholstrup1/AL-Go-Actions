@@ -15,7 +15,6 @@ function Set-EnvVariable([string]$name, [string]$value, [switch]$runLocally) {
     if ($runLocally) {
         [Environment]::SetEnvironmentVariable($name, $value)
     } else {
-        Write-Host "##[set-env name=$name;]$value"
         Add-Content -Path $env:GITHUB_OUTPUT -Value "$name=$value"
         Add-Content -Path $env:GITHUB_ENV -Value "$name=$value"
     }
