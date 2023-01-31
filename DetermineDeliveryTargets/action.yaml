@@ -28,11 +28,11 @@ runs:
       shell: ${{ inputs.shell }}
       env:
         _projectsJson: ${{ inputs.projectsJson }}
+        settingsJson: ${{ inputs.settingsJson }}
         _workspace: ${{ inputs.workspace }}
         _type: ${{ inputs.type }}
-        _settings: ${{ inputs.settings }}
         _refName: ${{ inputs.refName }}
-      run: ${{ github.action_path }}/DetermineDeliveryTargets.ps1 -projectsJson $ENV:_projectsJson -workspace $ENV:_workspace -type $ENV:_type -settings $ENV:_settings -refName $ENV:_refName
+      run: ${{ github.action_path }}/DetermineDeliveryTargets.ps1 -projectsJson $ENV:_projectsJson -settingsJson $ENV:_settings -workspace $ENV:_workspace -type $ENV:_type -refName $ENV:_refName
 branding:
   icon: terminal
   color: blue
