@@ -144,7 +144,11 @@ try {
         if ($settings.alwaysBuildAllProjects) {
             Write-Host "Building all projects because alwaysBuildAllProjects is set to true"
             return $projects
-        } else {
+        } elseif ($ENV:GITHUB_WORKFLOW -eq 'Official Build') {
+            Write-Host "Building all projects because this is an official build"
+            return $projects
+        } 
+        else {
             $filesChanged = Get-ChangedFiles -token $token
             if ($filesChanged.Count -eq 0) {
                 Write-Host "Building all projects"
