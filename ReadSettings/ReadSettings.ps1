@@ -195,8 +195,8 @@ try {
 
         if ($projects) {
             AddTelemetryProperty -telemetryScope $telemetryScope -key "projects" -value "$($projects -join ', ')"
-            Write-Host "All Projects: $($projects -join ', ')"
-            $buildProjects = Get-ProjectsToBuild -settings $settings -projects $projects -baseFolder $baseFolder -token $token
+            Write-Host "All Projects: $($projects -join ', ') - $($projects.GetType())"
+            $buildProjects += Get-ProjectsToBuild -settings $settings -projects $projects -baseFolder $baseFolder -token $token
             
             if ($settings.useProjectDependencies) {
                 $buildAlso = @{}
