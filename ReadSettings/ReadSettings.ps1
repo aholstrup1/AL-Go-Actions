@@ -215,7 +215,8 @@ try {
                 Write-Host "BuildOrderDepth=$($buildOrder.Count)"
             }
         }
-        Write-Host "Projects to build: $($buildProjects -join ', ')"
+        Write-Host "Projects to build: $($buildProjects -join ', ') - $($BuildProjects.GetType())"
+        Write-Host $buildProjects
         if (Test-Path (Join-Path ".AL-Go" "settings.json") -PathType Leaf) {
             $buildProjects += @(".")
         }
