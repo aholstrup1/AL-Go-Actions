@@ -185,14 +185,13 @@ try {
 
     if ($getProjects) {
         Write-Host "Determining projects to build"
+        $buildProjects = @()
         if ($settings.projects) {
             $projects = $settings.projects
         }
         else {
             $projects = @(Get-ChildItem -Path $baseFolder -Recurse -Depth 2 | Where-Object { $_.PSIsContainer -and (Test-Path (Join-Path $_.FullName ".AL-Go/settings.json") -PathType Leaf) } | ForEach-Object { $_.FullName.Substring($baseFolder.length+1) })
         }
-        $buildProjects = @()
-        $buildProjects = Get-ProjectsToBuild -settings $settings -projects $projects -baseFolder $baseFolder -token $token
 
         if ($projects) {
             AddTelemetryProperty -telemetryScope $telemetryScope -key "projects" -value "$($projects -join ', ')"
@@ -216,6 +215,7 @@ try {
                 Write-Host "BuildOrderDepth=$($buildOrder.Count)"
             }
         }
+        Write-Host "Projects to build: $($buildProjects -join ', ')"
         if (Test-Path (Join-Path ".AL-Go" "settings.json") -PathType Leaf) {
             $buildProjects += @(".")
         }
