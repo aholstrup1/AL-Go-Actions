@@ -139,8 +139,6 @@ try {
             $filesChanged = @($response.files | ForEach-Object { $_.filename })
         }
 
-        Write-Host "$filesChanged - $($filesChanged.GetType())"
-
         return $filesChanged
     }
 
@@ -154,8 +152,7 @@ try {
             return $projects
         } #>
         else {
-            $filesChanged = Get-ChangedFiles -token $token
-            Write-Host "$filesChanged 2 - $($filesChanged.GetType())"
+            $filesChanged = @(Get-ChangedFiles -token $token)
             if ($filesChanged.Count -eq 0) {
                 Write-Host "Building all projects"
                 return $projects
