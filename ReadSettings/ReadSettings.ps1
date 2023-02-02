@@ -155,6 +155,7 @@ try {
         } #>
         else {
             $filesChanged = Get-ChangedFiles -token $token
+            Write-Host "$filesChanged 2 - $($filesChanged.GetType())"
             if ($filesChanged.Count -eq 0) {
                 Write-Host "Building all projects"
                 return $projects
