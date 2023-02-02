@@ -139,6 +139,8 @@ try {
             $filesChanged = @($response.files | ForEach-Object { $_.filename })
         }
 
+        Write-Host "$filesChanged - $($filesChanged.GetType())"
+
         return $filesChanged
     }
 
