@@ -12,6 +12,8 @@ Param(
 $ErrorActionPreference = "STOP"
 Set-StrictMode -version 2.0
 
+Write-Host "BuildOrderDepth=$buildOrderDepth"
+Write-Host "WorkflowDepth=$workflowDepth"
 Write-Host "Projects=$projectsJson"
 $projects = $projectsJson | ConvertFrom-Json
 Write-Host "BuildOrder=$buildOrderJson"
@@ -24,7 +26,7 @@ if ($buildOrderDepth -lt $workflowDepth) {
 $step = $buildOrderDepth
 $buildOrderDepth..1 | ForEach-Object {
   Write-host "$_"
-  if ($buildOrder.PSobject.Properties.name.contains($_)) {
+  if ($buildOrder.PSobject.Properties.name -eq $_) {
     $ps = @($buildOrder."$_" | Where-Object { $projects -contains $_ })
   } else {
     $ps = @()
