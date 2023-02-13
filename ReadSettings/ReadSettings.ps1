@@ -28,12 +28,8 @@ function Get-ChangedFiles($token) {
 
     $url = "$($ENV:GITHUB_API_URL)/repos/$($ENV:GITHUB_REPOSITORY)/compare/$($ghEvent.pull_request.base.sha)...$($ghEvent.pull_request.head.sha)"
 
-    Write-Host "url: $url"
-
     $response = InvokeWebRequest -Headers $headers -Uri $url | ConvertFrom-Json
     $filesChanged = @($response.files | ForEach-Object { $_.filename })
-
-    Write-Host "Files changed: $($filesChanged)"
 
     return $filesChanged
 }
@@ -48,9 +44,8 @@ function Get-ProjectsToBuild($settings, $projects, $baseFolder, $token) {
         Write-Host "Building all projects because this is not a pull request"
         return $projects
     }
-    $filesChanged = @(Get-ChangedFiles -token $token)
 
-    Write-Host "Files changed: $($filesChanged.Count)"
+    $filesChanged = @(Get-ChangedFiles -token $token)
     if ($filesChanged -like '.github/*.json') {
         Write-Host "Changes to repo Settings, building all projects"
         return $projects
