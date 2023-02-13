@@ -29,7 +29,7 @@ function Get-ChangedFiles($token) {
     Write-Host "ghEvent: $($ghEvent)"
     Write-Host "ghEvent: $(Get-Content $ENV:GITHUB_EVENT_PATH -encoding UTF8)"
 
-    $url = "$($ENV:GITHUB_API_URL)/repos/$($ENV:GITHUB_REPOSITORY)/compare/$($ghEvent.pull_request.base.sha)...$($ENV:GITHUB_SHA)"
+    $url = "$($ENV:GITHUB_API_URL)/repos/$($ENV:GITHUB_REPOSITORY)/compare/$($ghEvent.pull_request.base.sha)...$($ghEvent.pull_request.head.sha)"
 
     Write-Host "url: $url"
 
