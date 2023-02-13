@@ -19,6 +19,60 @@ Param(
     [string] $get = ""
 )
 
+function Get-ChangedFiles($token) {
+    $headers = @{             
+        "Authorization" = "token $token"
+        "Accept" = "application/vnd.github.baptiste-preview+json"
+    }
+    $ghEvent = Get-Content $ENV:GITHUB_EVENT_PATH -encoding UTF8 | ConvertFrom-Json
+
+    $url = "$($ENV:GITHUB_API_URL)/repos/$($ENV:GITHUB_REPOSITORY)/compare/$($ghEvent.pull_request.base.sha)...$($ENV:GITHUB_SHA)"
+
+    $response = InvokeWebRequest -Headers $headers -Uri $url | ConvertFrom-Json
+    $filesChanged = @($response.files | ForEach-Object { $_.filename })
+
+    return $filesChanged
+}
+
+function Get-ProjectsToBuild($settings, $projects, $baseFolder, $token) {
+    if ($settings.alwaysBuildAllProjects) {
+        Write-Host "Building all projects because alwaysBuildAllProjects is set to true"
+        return $projects
+    } 
+    
+    if ($ENV:GITHUB_EVENT_NAME -notin @("pull_request_target", "pull_request")) {
+        Write-Host "Building all projects because this is not a pull request"
+        return $projects
+    }
+
+    $filesChanged = @(Get-ChangedFiles -token $token)
+    if ($filesChanged -like '.github/*.json') {
+        Write-Host "Changes to repo Settings, building all projects"
+        return $projects
+    }
+    elseif ($filesChanged.Count -ge 250) {
+        Write-Host "More than 250 files modified, building all projects"
+        return $projects
+    }
+    else {
+        Write-Host "Modified files:"
+        $buildProjects = @()
+        $filesChanged | Out-Host
+        $buildProjects = @($projects | Where-Object {
+                $checkProject = $_
+                $buildProject = $false
+                if (Test-Path -Path (Join-Path $baseFolder "$checkProject/.AL-Go/settings.json")) {
+                    $projectFolders = Get-ProjectFolders -baseFolder $baseFolder -project $checkProject -token $token -includeAlGoFolder -includeApps -includeTestApps
+                    $projectFolders | ForEach-Object {
+                        if ($filesChanged -like "$_/*") { $buildProject = $true }
+                    }
+                }
+                $buildProject
+            })
+        return $buildProjects
+    }
+}
+
 $ErrorActionPreference = "Stop"
 Set-StrictMode -Version 2.0
 $telemetryScope = $null
@@ -31,7 +85,7 @@ try {
     . (Join-Path -Path $PSScriptRoot -ChildPath "..\AL-Go-Helper.ps1" -Resolve)
     $BcContainerHelperPath = DownloadAndImportBcContainerHelper -baseFolder $baseFolder
 
-    import-module (Join-Path -path $PSScriptRoot -ChildPath "..\TelemetryHelper.psm1" -Resolve)
+    import-module (Join-Path -Path $PSScriptRoot -ChildPath "..\TelemetryHelper.psm1" -Resolve)
     $telemetryScope = CreateScope -eventId 'DO0079' -parentTelemetryScopeJson $parentTelemetryScopeJson
 
     $settings = ReadSettings -baseFolder $baseFolder -project $project
@@ -117,64 +171,6 @@ try {
     Add-Content -Path $env:GITHUB_OUTPUT -Value "BuildModes=$buildModes"
     Write-Host "BuildModes=$buildModes"
 
-    function Get-ChangedFiles($token) {
-        $headers = @{             
-            "Authorization" = "token $token"
-            "Accept" = "application/vnd.github.baptiste-preview+json"
-        }
-        $ghEvent = Get-Content $ENV:GITHUB_EVENT_PATH -encoding UTF8 | ConvertFrom-Json
-
-        $url = "$($ENV:GITHUB_API_URL)/repos/$($ENV:GITHUB_REPOSITORY)/compare/$($ghEvent.pull_request.base.sha)...$($ENV:GITHUB_SHA)"
-
-        $response = InvokeWebRequest -Headers $headers -Uri $url | ConvertFrom-Json
-        $filesChanged = @($response.files | ForEach-Object { $_.filename })
-
-        return $filesChanged
-    }
-
-    function Get-ProjectsToBuild($settings, $projects, $baseFolder, $token) {
-        if ($settings.alwaysBuildAllProjects) {
-            Write-Host "Building all projects because alwaysBuildAllProjects is set to true"
-            return $projects
-        } elseif ($ENV:GITHUB_EVENT_NAME -notin @("pull_request_target", "pull_request")) {
-            Write-Host "Building all projects because this is not a pull request"
-            return $projects
-        }
-        else {
-            $filesChanged = @(Get-ChangedFiles -token $token)
-            if ($filesChanged.Count -eq 0) {
-                Write-Host "Building all projects"
-                return $projects
-            }
-            elseif ($filesChanged -like '.github/*.json') {
-                Write-Host "Changes to Repo Settings, building all projects"
-                return $projects
-            }
-            elseif ($filesChanged.Count -ge 250) {
-                Write-Host "More than 250 files modified, building all projects"
-                return $projects
-            }
-            else {
-                Write-Host "Modified files:"
-                $buildProjects = @()
-                $filesChanged | Out-Host
-                $buildProjects = @($projects | Where-Object {
-                    $checkProject = $_
-                    $buildProject = $false
-                    if (Test-Path -path (Join-Path $baseFolder "$checkProject/.AL-Go/settings.json")) {
-                        $projectFolders = Get-ProjectFolders -baseFolder $baseFolder -project $checkProject -token $token -includeAlGoFolder -includeApps -includeTestApps
-                        $projectFolders | ForEach-Object {
-                            if ($filesChanged -like "$_/*") { $buildProject = $true }
-                        }
-                    }
-                    $buildProject
-                })
-                Write-Host "Modified projects: $($buildProjects -join ', ')"
-                return $buildProjects
-            }
-        }
-    }
-
     if ($getProjects) {
         Write-Host "Determining projects to build"
         $buildProjects = @()
@@ -196,7 +192,6 @@ try {
                 $projectDependencies = @{}
                 AnalyzeProjectDependencies -baseFolder $baseFolder -projects $projects -buildOrder ([ref]$buildOrder) -buildAlso ([ref]$buildAlso) -projectDependencies ([ref]$projectDependencies)
                 $buildProjects = @($buildProjects | ForEach-Object { $_; if ($buildAlso.Keys -contains $_) { $buildAlso."$_" } } | Select-Object -Unique)
-                Write-Host "Building projects: $($buildProjects -join ', ')"
                 $projectDependenciesJson = $projectDependencies | ConvertTo-Json -Compress
                 $buildOrderJson = $buildOrder | ConvertTo-Json -Compress
                 Add-Content -Path $env:GITHUB_OUTPUT -Value "ProjectDependenciesJson=$projectDependenciesJson"
@@ -208,7 +203,6 @@ try {
             }
         }
         Write-Host "Projects to build: $($buildProjects -join ', ')"
-        Write-Host $buildProjects
         if (Test-Path (Join-Path ".AL-Go" "settings.json") -PathType Leaf) {
             $buildProjects += @(".")
         }
