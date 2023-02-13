@@ -24,7 +24,7 @@ function Get-ChangedFiles($token) {
         "Authorization" = "token $token"
         "Accept" = "application/vnd.github.baptiste-preview+json"
     }
-    $ghEvent = Get-Content $ENV:GITHUB_EVENT_PATH -encoding UTF8 | ConvertFrom-Json
+    $ghEvent = Get-Content $ENV:GITHUB_EVENT_PATH -encoding UTF8 | ConvertFrom-Json -Depth 99
 
     Write-Host "ghEvent: $($ghEvent)"
 
@@ -56,7 +56,7 @@ function Get-ProjectsToBuild($settings, $projects, $baseFolder, $token) {
         Write-Host "Building all projects because this is not a pull request"
         return $projects
     }
-
+    Write-Host "ENV:GITHUB_EVENT_NAME: $ENV:GITHUB_EVENT_NAME"
     $filesChanged = @(Get-ChangedFiles -token $token)
 
     Write-Host "Files changed: $($filesChanged.Count())"
