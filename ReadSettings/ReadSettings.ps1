@@ -26,18 +26,9 @@ function Get-ChangedFiles($token) {
     }
     $ghEvent = Get-Content $ENV:GITHUB_EVENT_PATH -encoding UTF8 | ConvertFrom-Json
 
-    Write-Host "ghEvent: $($ghEvent)"
-    Write-Host "ghEvent: $(Get-Content $ENV:GITHUB_EVENT_PATH -encoding UTF8)"
-
     $url = "$($ENV:GITHUB_API_URL)/repos/$($ENV:GITHUB_REPOSITORY)/compare/$($ghEvent.pull_request.base.sha)...$($ghEvent.pull_request.head.sha)"
 
     Write-Host "url: $url"
-
-    $baseSHA = '${{ github.event.pull_request.base.sha }}'
-    $headSHA = '${{ github.event.pull_request.head.sha }}'
-    $url1 = "$($ENV:GITHUB_API_URL)/repos/$($ENV:GITHUB_REPOSITORY)/compare/$baseSHA...$headSHA"
-
-    Write-Host "url1: $url1"
 
     $response = InvokeWebRequest -Headers $headers -Uri $url | ConvertFrom-Json
     $filesChanged = @($response.files | ForEach-Object { $_.filename })
@@ -57,10 +48,9 @@ function Get-ProjectsToBuild($settings, $projects, $baseFolder, $token) {
         Write-Host "Building all projects because this is not a pull request"
         return $projects
     }
-    Write-Host "ENV:GITHUB_EVENT_NAME: $ENV:GITHUB_EVENT_NAME"
     $filesChanged = @(Get-ChangedFiles -token $token)
 
-    Write-Host "Files changed: $($filesChanged.Count())"
+    Write-Host "Files changed: $($filesChanged.Count)"
     if ($filesChanged -like '.github/*.json') {
         Write-Host "Changes to repo Settings, building all projects"
         return $projects
