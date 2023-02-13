@@ -24,9 +24,10 @@ function Get-ChangedFiles($token) {
         "Authorization" = "token $token"
         "Accept" = "application/vnd.github.baptiste-preview+json"
     }
-    $ghEvent = Get-Content $ENV:GITHUB_EVENT_PATH -encoding UTF8 | ConvertFrom-Json -Depth 99
+    $ghEvent = Get-Content $ENV:GITHUB_EVENT_PATH -encoding UTF8 | ConvertFrom-Json
 
     Write-Host "ghEvent: $($ghEvent)"
+    Write-Host "ghEvent: $(Get-Content $ENV:GITHUB_EVENT_PATH -encoding UTF8)"
 
     $url = "$($ENV:GITHUB_API_URL)/repos/$($ENV:GITHUB_REPOSITORY)/compare/$($ghEvent.pull_request.base.sha)...$($ENV:GITHUB_SHA)"
 
