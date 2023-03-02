@@ -734,7 +734,7 @@ function AnalyzeRepo {
             # Check if there are any folders matching $folder
             # Test-Path $folder -PathType Container will return false if any files matches $folder (beside folders)
             if (-not ((Test-Path $folder) -and (Get-ChildItem $folder -Directory))) {
-                if (!$doNotIssueWarnings) { OutputWarning -message "$descr $folderName, specified in $ALGoSettingsFile, does not exist" }
+                if (!$doNotIssueWarnings) { OutputWarning -message "$descr $folderName, specified in $ALGoSettingsFile, does not exist ($folder)" }
             }
             elseif (-not (Test-Path $appJsonFile -PathType Leaf)) {
                 if (!$doNotIssueWarnings) { OutputWarning -message "$descr $folderName, specified in $ALGoSettingsFile, does not contain the source code for an app (no app.json file)" }
@@ -1915,10 +1915,13 @@ function GetBaseFolder {
         [string] $folder
     )
     
-    $CurrentDir = Get-Location
-    Set-Location $folder
-    $baseFolder = invoke-git rev-parse --show-toplevel -returnValue
-    Set-Location $CurrentDir
+    Push-Location $folder
+    try {
+        $baseFolder = invoke-git rev-parse --show-toplevel -returnValue
+    }
+    finally {
+        Pop-Location
+    }
 
     if (!$baseFolder -or !(Test-Path (Join-Path $baseFolder '.github') -PathType Container)) {
         throw "Cannot determine base folder from folder $folder."
