@@ -1,4 +1,4 @@
-name: PowerShell script
+name: Sign
 author: Microsoft Corporation
 inputs:
   shell:
@@ -20,13 +20,6 @@ inputs:
   azureKeyVaultCertificateName:
     description: The name of the certificate in the Azure Key Vault
     required: true
-  pathToFiles:
-    description: The path to the files to be signed
-    required: true
-  fileExtensionsToSign:
-    description: The file extensions to be signed
-    required: false
-    default: .app
   timestampService:
     description: The URI of the timestamp server
     required: false
@@ -35,39 +28,41 @@ inputs:
     description: The digest algorithm to use for signing and timestamping
     required: false
     default: SHA256
+  pathToFiles:
+    description: The path to the files to be signed
+    required: true
+  parentTelemetryScopeJson:
+    description: Specifies the parent telemetry scope for the telemetry signal
+    required: false
+    default: '7b7d'
 runs:
   using: composite
   steps:
     - name: Install Azure SignTool
       shell: ${{ inputs.shell }}
       run: dotnet tool install --global AzureSignTool --version 4.0.1
+    
+    - name: Register NavSip
+      shell: ${{ inputs.shell }}
+      run: | 
+        Import-Module (Join-Path -Path $PSScriptRoot -ChildPath "Sign.psm1" -Resolve)
+        Register-NavSip
 
     - name: run
       shell: ${{ inputs.shell }}
       id: Sign
-      env:
-        _azureKeyVaultURI: ${{ inputs.azureKeyVaultURI }}
-        _azureKeyVaultClientID: ${{ inputs.azureKeyVaultClientID }}
-        _azureKeyVaultClientSecret: ${{ inputs.azureKeyVaultClientSecret }}
-        _azureKeyVaultTenantID: ${{ inputs.azureKeyVaultTenantID }}
-        _azureKeyVaultCertificateName: ${{ inputs.azureKeyVaultCertificateName }}
-        _pathToFiles: ${{ inputs.pathToFiles }}
-        _fileExtensionsToSign: ${{ inputs.fileExtensionsToSign }}
-        _timestampService: ${{ inputs.timestampService }}
-        _digestAlgorithm: ${{ inputs.digestAlgorithm }}
       run: | 
         try { 
-          $FileExtensionsToSign = ($ENV:_fileExtensionsToSign -split ',')          
-          ${{ github.action_path }}/Sign.ps1 -AzureKeyVaultURI "$($ENV:_azureKeyVaultURI)" `
-                                      -AzureKeyVaultClientID "$($ENV:_azureKeyVaultClientID)" `
-                                      -AzureKeyVaultClientSecret "$($ENV:_azureKeyVaultClientSecret)" `
-                                      -AzureKeyVaultTenantID "$($ENV:_azureKeyVaultTenantID)" `
-                                      -AzureKeyVaultCertificateName "$($ENV:_azureKeyVaultCertificateName)" `
-                                      -TimestampService "$($ENV:_timestampService)" `
-                                      -TimestampDigest "$($ENV:_digestAlgorithm)" `
-                                      -FileDigest "$($ENV:_digestAlgorithm)" `
-                                      -PathToFiles "$($ENV:_pathToFiles)" `
-                                      -FileExtensionsToSign $FileExtensionsToSign
+          ${{ github.action_path }}/Sign.ps1 -AzureKeyVaultURI "${{ inputs.azureKeyVaultURI }}" `
+                                      -AzureKeyVaultClientID "${{ inputs.azureKeyVaultClientID }}" `
+                                      -AzureKeyVaultClientSecret "${{ inputs.azureKeyVaultClientSecret }}" `
+                                      -AzureKeyVaultTenantID "${{ inputs.azureKeyVaultTenantID }}" `
+                                      -AzureKeyVaultCertificateName "${{ inputs.azureKeyVaultCertificateName }}" `
+                                      -TimestampService "${{ inputs.timestampService }}" `
+                                      -TimestampDigest "${{ inputs.digestAlgorithm }}" `
+                                      -FileDigest "${{ inputs.digestAlgorithm }}" `
+                                      -PathToFiles "${{ inputs.pathToFiles }}" `
+                                      -ParentTelemetryScopeJson "${{ inputs.parentTelemetryScopeJson }}"
         } catch { 
           Write-Host "::Error::Unexpected error when running action ($($_.Exception.Message.Replace("`r",'').Replace("`n",' ')))"; exit 1 
         }

@@ -9,16 +9,16 @@ param(
     [string]$AzureKeyVaultTenantID,
     [Parameter(HelpMessage = "Azure Key Vault Certificate Name.", Mandatory = $true)]
     [string]$AzureKeyVaultCertificateName,
-    [Parameter(HelpMessage = "Path to the folder containing the files to sign.", Mandatory = $true)]
+    [Parameter(HelpMessage = "Paths to the files to be signed.", Mandatory = $true)]
     [String]$PathToFiles,
-    [Parameter(HelpMessage = "File extensions to sign.", Mandatory = $false)]
-    [String[]]$FileExtensionsToSign = @(".app"),
     [Parameter(HelpMessage = "Timestamp service.", Mandatory = $false)]
     [string]$TimestampService = "http://timestamp.digicert.com",
     [Parameter(HelpMessage = "Timestamp digest algorithm.", Mandatory = $false)]
     [string]$TimestampDigest = "sha256",
     [Parameter(HelpMessage = "File digest algorithm.", Mandatory = $false)]
-    [string]$FileDigest = "sha256"
+    [string]$FileDigest = "sha256",
+    [Parameter(HelpMessage = "Specifies the parent telemetry scope for the telemetry signal", Mandatory = $false)]
+    [string] $ParentTelemetryScopeJson = '7b7d'
 )
 
 $ErrorActionPreference = "Stop"
@@ -30,12 +30,10 @@ $bcContainerHelperPath = $null
 
 try {
     . (Join-Path -Path $PSScriptRoot -ChildPath "..\AL-Go-Helper.ps1" -Resolve)
-
     $BcContainerHelperPath = DownloadAndImportBcContainerHelper -baseFolder $ENV:GITHUB_WORKSPACE 
+    $telemetryScope = CreateScope -eventId 'DO0083' -parentTelemetryScopeJson $ParentTelemetryScopeJson
 
-    Register-NavSip
-
-    $Files = Get-FilesWithExtensions -PathToFiles $PathToFiles -Extensions $FileExtensionsToSign
+    $Files = Get-ChildItem -Path $PathToFiles -File | Select-Object -ExpandProperty FullName
     Write-Host "Signing files:"
     $Files | ForEach-Object { 
         Write-Host "- $_" 
@@ -49,11 +47,12 @@ try {
         --azure-key-vault-certificate $AzureKeyVaultCertificateName `
         --timestamp-rfc3161 "$TimestampService" `
         --timestamp-digest $TimestampDigest `
-        --verbose `
         $Files
+    
+    TrackTrace -telemetryScope $telemetryScope
 }
 catch {
-    OutputError -message "AnalyzeTests action failed.$([environment]::Newline)Error: $($_.Exception.Message)$([environment]::Newline)Stacktrace: $($_.scriptStackTrace)"
+    OutputError -message "Sign action failed.$([environment]::Newline)Error: $($_.Exception.Message)$([environment]::Newline)Stacktrace: $($_.scriptStackTrace)"
     TrackException -telemetryScope $telemetryScope -errorRecord $_
 }
 finally {

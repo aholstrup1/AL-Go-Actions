@@ -732,7 +732,7 @@ function AnalyzeRepo {
             $enumerate = $true
 
             # Check if there are any folders matching $folder
-            if (Get-Item $folder | Where-Object { $_ -is [System.IO.DirectoryInfo] }) {
+            if (!(Get-Item $folder | Where-Object { $_ -is [System.IO.DirectoryInfo] })) {
                 if (!$doNotIssueWarnings) { OutputWarning -message "$descr $folderName, specified in $ALGoSettingsFile, does not exist" }
             }
             elseif (-not (Test-Path $appJsonFile -PathType Leaf)) {
@@ -1940,7 +1940,8 @@ function GetProject {
         [string] $projectALGoFolder
     )
 
-    $projectFolder = Join-Path $projectALGoFolder ".." -Resolve
+    $projectFolder = Join-Path $projectALGoFolder '..' -Resolve
+    $baseFolder = Join-Path $baseFolder '.' -Resolve
     if ($projectFolder -eq $baseFolder) {
         $project = '.'
     }
@@ -1951,54 +1952,4 @@ function GetProject {
         Pop-Location
     }
     $project
-}
-
-function Get-NavSipFromArtifacts() {
-    #TODO: It would be nice with a different approach here - This downloads a lot of unnecessary stuff
-    $artifactTempFolder = Join-Path $([System.IO.Path]::GetTempPath()) ([System.IO.Path]::GetRandomFileName())
-    $navSipTempFolder = Join-Path $([System.IO.Path]::GetTempPath()) ([System.IO.Path]::GetRandomFileName())
-
-    try {
-        Download-Artifacts -artifactUrl (Get-BCArtifactUrl -type Sandbox) -includePlatform -basePath $artifactTempFolder | Out-Null
-        Write-Host "Downloaded artifacts to $artifactTempFolder"
-        $navsip = Get-ChildItem -Path $artifactTempFolder -Filter "navsip.dll" -Recurse
-        Write-Host "Found navsip at $($navsip.FullName)"
-        New-Item -Path $navSipTempFolder -ItemType Directory -Force -Verbose | Out-Null
-        Copy-Item -Path $navsip.FullName -Destination "$navSipTempFolder/navsip.dll" -Force | Out-Null
-        Write-Host "Copied navsip to $navSipTempFolder"
-    } finally {
-        Remove-Item -Path $artifactTempFolder -Recurse -Force
-    }
-    
-    return Join-Path $navSipTempFolder "navsip.dll" -Resolve
-}
-
-function Register-NavSip() {
-    $navsipPath = Get-NavSipFromArtifacts
-    $navSip32Path = "C:\Windows\System32"
-    $navSip64Path = "C:\Windows\SysWow64"
-
-    $navSip32Path, $navSip64Path | ForEach-Object {
-        $navSipDestination = $_
-        try {
-            Write-Host "Copy $navsipPath to $navSipDestination"
-            Copy-Item -Path $navsipPath -Destination $navSipDestination -Force
-            
-            $navSipDllPath = Join-Path $navSipDestination "navsip.dll" -Resolve
-            Write-Host "Registering dll $navSipDllPath"
-            RegSvr32 /s $navSipDllPath
-        }
-        catch {
-            Write-Host "Failed to copy navsip to $navSipDestination"
-        }
-    }
-}
-
-function Get-FilesWithExtensions($PathToFiles, $Extensions) {
-    $Files = Get-ChildItem -Path $PathToFiles -File -Recurse
-    if ((-not $Extensions) -or ($Extensions -contains "*")) {
-        return $Files | Select-Object -ExpandProperty FullName
-    }
-    $FilteredFiles = $Files | Where-Object { $Extensions -contains $_.Extension }
-    return $FilteredFiles | Select-Object -ExpandProperty FullName
 }
