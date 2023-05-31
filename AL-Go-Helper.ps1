@@ -649,8 +649,8 @@ function AnalyzeRepo {
     Param(
         [hashTable] $settings,
         $token,
-        [string] $baseFolder,
-        [string] $project,
+        [string] $baseFolder = $ENV:GITHUB_WORKSPACE,
+        [string] $project = '.',
         [string] $insiderSasToken,
         [switch] $doNotCheckArtifactSetting,
         [switch] $doNotIssueWarnings,
@@ -1110,6 +1110,7 @@ function CloneIntoNewFolder {
     invoke-git clone $serverUrl
 
     Set-Location *
+    invoke-git checkout $ENV:GITHUB_REF_NAME
 
     if ($branch) {
         invoke-git checkout -b $branch
@@ -1132,7 +1133,7 @@ function CommitFromNewFolder {
     invoke-git commit --allow-empty -m "'$commitMessage'"
     if ($branch) {
         invoke-git push -u $serverUrl $branch
-        invoke-gh pr create --fill --head $branch --repo $env:GITHUB_REPOSITORY
+        invoke-gh pr create --fill --head $branch --repo $env:GITHUB_REPOSITORY --base $ENV:GITHUB_REF_NAME
     }
     else {
         invoke-git push $serverUrl
@@ -2031,8 +2032,8 @@ function Retry-Command {
     param(
         [Parameter(Mandatory = $true)]
         [ScriptBlock]$Command,
-        [Parameter(Mandatory = $true)]
-        [int]$MaxRetries,
+        [Parameter(Mandatory = $false)]
+        [int]$MaxRetries = 3,
         [Parameter(Mandatory = $false)]
         [int]$RetryDelaySeconds = 5
     )
@@ -2040,7 +2041,7 @@ function Retry-Command {
     $retryCount = 0
     while ($retryCount -lt $MaxRetries) {
         try {
-            & $Command
+            Invoke-Command $Command
             if ($LASTEXITCODE -ne 0) {
                 throw "Command failed with exit code $LASTEXITCODE"
             }
