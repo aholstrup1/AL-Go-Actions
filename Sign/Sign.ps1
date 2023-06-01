@@ -41,12 +41,12 @@ try {
 
     $AzureCredentials = ConvertFrom-Json $AzureCredentialsJson
     $settings = ConvertFrom-Json $settingsJson
-    if ($AzureCredentials.PSobject.Properties.name -eq "AzureKeyVaultName") {
+    if ($AzureCredentials.PSobject.Properties.name -eq "keyVaultName") {
         $AzureKeyVaultName = $AzureCredentials.AzureKeyVaultName
-    } elseif ($settings.PSobject.Properties.name -eq "AzureKeyVaultName") {
+    } elseif ($settings.PSobject.Properties.name -eq "keyVaultName") {
         $AzureKeyVaultName = $settings.AzureKeyVaultName
     } else {
-        throw "AzureKeyVaultName is not specified in AzureCredentials nor in settings"
+        throw "KeyVaultName is not specified in AzureCredentials nor in settings. Please specify it in one of them."
     }
 
     Retry-Command -Command {
