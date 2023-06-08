@@ -9,6 +9,9 @@ if (Test-Path $gitHubHelperPath) {
 }
 
 $ErrorActionPreference = "stop"
+
+
+
 Set-StrictMode -Version 2.0
 
 $ALGoFolderName = '.AL-Go'
