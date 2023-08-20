@@ -6,11 +6,12 @@ Param(
 )
 
 $telemetryScope = $null
+$bcContainerHelperPath = $null
 
 try {
     #region Action: Setup
     . (Join-Path -Path $PSScriptRoot -ChildPath "..\AL-Go-Helper.ps1" -Resolve)
-    DownloadAndImportBcContainerHelper -baseFolder $ENV:GITHUB_WORKSPACE
+    $BcContainerHelperPath = DownloadAndImportBcContainerHelper -baseFolder $ENV:GITHUB_WORKSPACE
     Import-Module (Join-Path -Path $PSScriptRoot -ChildPath "..\TelemetryHelper.psm1" -Resolve) -DisableNameChecking
     #endregion
     
@@ -38,8 +39,10 @@ try {
     TrackTrace -telemetryScope $telemetryScope
 }
 catch {
-    if ($env:BcContainerHelperPath) {
-        TrackException -telemetryScope $telemetryScope -errorRecord $_
-    }
+    TrackException -telemetryScope $telemetryScope -errorRecord $_
     throw
 }
+finally {
+    CleanupAfterBcContainerHelper -bcContainerHelperPath $bcContainerHelperPath
+}
+    

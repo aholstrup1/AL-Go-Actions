@@ -4,6 +4,7 @@ Param(
 )
 
 $telemetryScope = $null
+$BcContainerHelperPath = ""
 
 try {
     . (Join-Path -Path $PSScriptRoot -ChildPath "..\AL-Go-Helper.ps1" -Resolve)
@@ -27,7 +28,7 @@ try {
 
     Test-ALGoRepository -baseFolder $ENV:GITHUB_WORKSPACE
 
-    DownloadAndImportBcContainerHelper -baseFolder $ENV:GITHUB_WORKSPACE
+    $BcContainerHelperPath = DownloadAndImportBcContainerHelper -baseFolder $ENV:GITHUB_WORKSPACE
 
     import-module (Join-Path -path $PSScriptRoot -ChildPath "..\TelemetryHelper.psm1" -Resolve)
     $telemetryScope = CreateScope -eventId $eventId
@@ -70,8 +71,11 @@ try {
     Write-Host "correlationId=$correlationId"
 }
 catch {
-    if ($env:BcContainerHelperPath) {
+    if ($bcContainerHelperPath) {
         TrackException -telemetryScope $telemetryScope -errorRecord $_
     }
     throw
+}
+finally {
+    CleanupAfterBcContainerHelper -bcContainerHelperPath $bcContainerHelperPath
 }

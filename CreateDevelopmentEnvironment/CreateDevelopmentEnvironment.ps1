@@ -20,6 +20,7 @@ Param(
 )
 
 $telemetryScope = $null
+$bcContainerHelperPath = $null
 
 try {
     . (Join-Path -Path $PSScriptRoot -ChildPath "..\AL-Go-Helper.ps1" -Resolve)
@@ -30,7 +31,7 @@ try {
     }
     $serverUrl = CloneIntoNewFolder -actor $actor -token $token -branch $branch
     $repoBaseFolder = (Get-Location).Path
-    DownloadAndImportBcContainerHelper -baseFolder $repoBaseFolder
+    $BcContainerHelperPath = DownloadAndImportBcContainerHelper -baseFolder $repoBaseFolder
 
     import-module (Join-Path -path $PSScriptRoot -ChildPath "..\TelemetryHelper.psm1" -Resolve)
     $telemetryScope = CreateScope -eventId 'DO0073' -parentTelemetryScopeJson $parentTelemetryScopeJson
@@ -47,6 +48,7 @@ try {
         -reUseExistingEnvironment:$reUseExistingEnvironment `
         -baseFolder $repoBaseFolder `
         -project $project `
+        -bcContainerHelperPath $bcContainerHelperPath `
         -adminCenterApiCredentials ($adminCenterApiCredentials | ConvertFrom-Json | ConvertTo-HashTable)
 
     CommitFromNewFolder -serverUrl $serverUrl -commitMessage "Create a development environment $environmentName" -branch $branch
@@ -54,8 +56,9 @@ try {
     TrackTrace -telemetryScope $telemetryScope
 }
 catch {
-    if ($env:BcContainerHelperPath) {
-        TrackException -telemetryScope $telemetryScope -errorRecord $_
-    }
+    TrackException -telemetryScope $telemetryScope -errorRecord $_
     throw
+}
+finally {
+    CleanupAfterBcContainerHelper -bcContainerHelperPath $bcContainerHelperPath
 }

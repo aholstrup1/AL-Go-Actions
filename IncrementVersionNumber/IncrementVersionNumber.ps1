@@ -16,6 +16,7 @@ Param(
 )
 
 $telemetryScope = $null
+$bcContainerHelperPath = $null
 
 try {
     . (Join-Path -Path $PSScriptRoot -ChildPath "..\AL-Go-Helper.ps1" -Resolve)
@@ -26,7 +27,7 @@ try {
     }
     $serverUrl = CloneIntoNewFolder -actor $actor -token $token -branch $branch
     $repoBaseFolder = (Get-Location).path
-    DownloadAndImportBcContainerHelper -baseFolder $repoBaseFolder
+    $BcContainerHelperPath = DownloadAndImportBcContainerHelper -baseFolder $repoBaseFolder
 
     import-module (Join-Path -path $PSScriptRoot -ChildPath "..\TelemetryHelper.psm1" -Resolve)
     $telemetryScope = CreateScope -eventId 'DO0076' -parentTelemetryScopeJson $parentTelemetryScopeJson
@@ -129,8 +130,9 @@ try {
     TrackTrace -telemetryScope $telemetryScope
 }
 catch {
-    if ($env:BcContainerHelperPath) {
-        TrackException -telemetryScope $telemetryScope -errorRecord $_
-    }
+    TrackException -telemetryScope $telemetryScope -errorRecord $_
     throw
+}
+finally {
+    CleanupAfterBcContainerHelper -bcContainerHelperPath $bcContainerHelperPath
 }
