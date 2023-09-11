@@ -6,33 +6,21 @@ Param(
 )
 
 $telemetryScope = $null
-$bcContainerHelperPath = $null
-
-function Get-WorkflowStatus([string] $RunId) {
-    $workflowJobs = gh api /repos/aholstrup1/ALAppExtensions/actions/runs/$RunId/jobs | ConvertFrom-Json
-    $failedJobs = $workflowJobs.Jobs | Where-Object { $_.conclusion -eq "failure" }
-
-    if ($failedJobs) {
-        throw "Workflow failed with the following jobs: $($failedJobs.name -join ', ')"
-    }
-}
 
 try {
     . (Join-Path -Path $PSScriptRoot -ChildPath "..\AL-Go-Helper.ps1" -Resolve)
-    $BcContainerHelperPath = DownloadAndImportBcContainerHelper -baseFolder $ENV:GITHUB_WORKSPACE
+    DownloadAndImportBcContainerHelper
     import-module (Join-Path -path $PSScriptRoot -ChildPath "..\TelemetryHelper.psm1" -Resolve)
 
+    Write-Host "Post-processing workflow $eventId"
     if ($telemetryScopeJson -and $telemetryScopeJson -ne '7b7d') {
         $telemetryScope = RegisterTelemetryScope (hexStrToStr -hexStr $telemetryScopeJson)
         TrackTrace -telemetryScope $telemetryScope
     }
-
-    Get-WorkflowStatus -RunId $Env:GITHUB_RUN_ID
 }
 catch {
-    TrackException -telemetryScope $telemetryScope -errorRecord $_
+    if (Get-Module BcContainerHelper) {
+        TrackException -telemetryScope $telemetryScope -errorRecord $_
+    }
     throw
-}
-finally {
-    CleanupAfterBcContainerHelper -bcContainerHelperPath $bcContainerHelperPath
 }
