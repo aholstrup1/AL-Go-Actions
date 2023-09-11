@@ -414,6 +414,8 @@ try {
         Copy-Item -Path $containerEventLogFile -Destination $destFolder -Force -ErrorAction SilentlyContinue
         Copy-Item -Path $errorLog -Destination $destFolder -Force -ErrorAction SilentlyContinue
     }
+    Copy-Item -Path $errorLog -Destination $buildArtifactFolder -Force -ErrorAction SilentlyContinue
+    
 
     TrackTrace -telemetryScope $telemetryScope
 }
@@ -431,6 +433,7 @@ finally {
             Copy-Item -Path $eventLogFile -Destination $containerEventLogFile
             $destFolder = Join-Path $ENV:GITHUB_WORKSPACE $project
             Copy-Item -Path $containerEventLogFile -Destination $destFolder
+            Copy-Item -Path $errorLog -Destination $destFolder -Force
         }
     }
     catch {
