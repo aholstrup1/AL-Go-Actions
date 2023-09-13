@@ -7,7 +7,11 @@ function ConvertTo-SarifLog {
     $sarif = Get-SarifLog -Path $Path
 
     if ($OutputPath) {
-        $sarif | ConvertTo-Json -Depth 100 | Out-File $OutputPath -Encoding utf8
+        $sarifTrimmed = ($sarif | ConvertTo-Json -Depth 100).Trim()
+        Write-Host "Writing SARIF log to $OutputPath"
+        Write-Host $sarifTrimmed
+        $Utf8NoBomEncoding = New-Object System.Text.UTF8Encoding $False
+        [System.IO.File]::WriteAllLines($OutputPath, $sarifTrimmed, $Utf8NoBomEncoding)
     }
     else {
         return $sarif
@@ -17,7 +21,11 @@ function ConvertTo-SarifLog {
 
 function Get-SarifLog([string] $Path) {
     $errorlog = Get-Content $Path | ConvertFrom-Json
-    $sarifSchema = "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json"
+
+    Write-Host "Converting errorlog to SARIF log"
+    Write-Host (Get-Content $Path)
+
+    $sarifSchema = "https://json.schemastore.org/sarif-2.1.0.json"
     $version = "2.1.0"
     $runs = Get-Runs -ErrorLog $errorlog
 
@@ -56,7 +64,7 @@ function Get-Results([object] $ErrorLog) {
             ruleId    = $error.ruleId
             level     = ($error.properties.severity).ToLower()
             message   = @{
-                text = $error.shortMessage
+                text = "$($error.fullMessage)"
             }
             locations = @(Get-Locations -ErrorLocation $error.locations)
         }
@@ -71,7 +79,7 @@ function Get-Locations([object] $ErrorLocation) {
         $location = @{
             physicalLocation = @{
                 artifactLocation = @{
-                    uri = $location.analysisTarget.uri
+                    uri = GetLocalPath -Path $location.analysisTarget.uri
                 }
                 region           = @{
                     startLine   = $location.analysisTarget.region.startLine
@@ -101,14 +109,20 @@ function Get-Rules([object] $ErrorLog) {
             continue
         }
 
+        if ($error.properties.title) {
+            $message = $error.properties.title
+        } else {
+            $message = $error.fullMessage
+        }
+
         $rule = @{
             id                   = $error.ruleId
             name                 = $error.ruleId
             shortDescription     = @{
-                text = $error.properties.title
+                text = "$message"
             }
             fullDescription      = @{
-                text = $error.properties.title
+                text = "$message"
             }
             defaultConfiguration = @{
                 level = ($error.properties.defaultSeverity).ToLower()
@@ -135,4 +149,36 @@ function RuleExists($ExistingRules, $RuleId) {
     return $false
 }
 
+function GetLocalPath($Path) {
+    $localPath = $Path.Replace("c:\shared\", "")
+    $localPath = $localPath.Replace("\", "/")
+    return $localPath
+}
+
+function Merge-Errorlogs([string] $Path, [string] $OutputPath) {
+    $errorLogFiles = Get-ChildItem -Path "$Path\*ErrorLog*.json" -Recurse
+    $mergedErrorLog = @()
+
+    $issues = @()
+    $version = ""
+    $toolInfo = @{}
+
+    foreach ($errorLogFile in $errorLogFiles) {
+        $errorLog = Get-Content $errorLogFile.FullName | ConvertFrom-Json
+
+        $issues += $errorLog.issues
+        $version = $errorLog.version
+        $toolInfo = $errorLog.toolInfo
+    }
+
+    $mergedErrorLog = @{
+        version   = $version
+        toolInfo  = $toolInfo
+        issues    = $issues
+    }
+
+    $mergedErrorLog | ConvertTo-Json -Depth 100 | Out-File $OutputPath -Encoding utf8
+}
+
+Export-ModuleMember -Function Merge-Errorlogs
 Export-ModuleMember -Function ConvertTo-SarifLog
